@@ -162,7 +162,7 @@ curl -X POST <ApiEndpoint>/log \
     "type": "API_ERROR",
     "message": "Something went wrong",
     "url": "https://example.com/api",
-    "occurredAt": "2026-03-18T00:00:00.000Z"
+    "occurredAt": 1773891434428
   }'
 ```
 

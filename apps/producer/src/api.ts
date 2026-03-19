@@ -10,18 +10,20 @@ app.use("*", cors());
 app.post("/log", async (c) => {
   const body = await c.req.json();
 
+  const messageId = crypto.randomUUID();
   const payload: LogMessage = {
+    id: messageId,
     type: body.type,
     message: body.message,
     url: body.url,
     details: body.details,
     occurredAt: body.occurredAt,
-    receivedAt: new Date().toISOString(),
+    receivedAt: Date.now(),
   };
 
   await Resource.NotifyHubQueue.send(payload);
 
-  return c.json(payload);
+  return c.text(messageId, 202);
 });
 
 export default app;

@@ -1,10 +1,11 @@
-import { ErrorType } from "./log-types";
+import { LogType } from "./log-types";
 
 export interface LogMessage {
-  type: ErrorType;
+  id: string;
+  type: LogType;
   message: string;
   url?: string;
-  details?: Record<string, unknown>;
-  occurredAt: string;
-  receivedAt: string;
+  details?: Record<string, any>;
+  occurredAt: number;
+  receivedAt: number;
 }

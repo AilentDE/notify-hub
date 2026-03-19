@@ -219,3 +219,6 @@ $RECYCLE.BIN/
 
 # SST
 .sst
+
+# Cloudflate
+wrangler.toml

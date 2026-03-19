@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:generate": "pnpm -C packages/core exec drizzle-kit generate --config=drizzle.config.ts",
+    "db:generate:named": "pnpm -C packages/core exec drizzle-kit generate --config=drizzle.config.ts --name=$npm_config_name",
+    "db:migrate": "pnpm dlx wrangler --cwd packages/core d1 migrations apply DB --remote",
+    "db:migrations:list": "pnpm dlx wrangler --cwd packages/core d1 migrations list DB --remote",
+    "db:verify:tables": "pnpm dlx wrangler --cwd packages/core d1 execute DB --remote --command \"SELECT name FROM sqlite_master WHERE type='table';\""
   },
   "keywords": [],
   "author": "",

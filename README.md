@@ -65,6 +65,67 @@ CLOUDFLARE_DEFAULT_ACCOUNT_ID=<your_account_id>
 pnpm install
 ```
 
+## D1 Migration（Drizzle + Wrangler）
+
+以下流程可把 `packages/core/schema.ts` 轉成 migration，並套用到既有的 Cloudflare D1 資料庫。
+
+1. 在 `packages/core/drizzle.config.ts` 設定 migration 輸出目錄：
+
+```ts
+import { defineConfig } from "drizzle-kit";
+
+export default defineConfig({
+  schema: "./schema.ts",
+  out: "./migrations",
+  dialect: "sqlite",
+  strict: true,
+  verbose: true,
+});
+```
+
+2. 在 `packages/core/wrangler.toml` 設定 D1 連線與 migration 目錄（`database_id` 請替換成 Cloudflare D1 頁面的 UUID）：
+
+```toml
+name = "notify-hub-db-migrations"
+compatibility_date = "2026-03-19"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "<your-d1-database-name>"
+database_id = "<your-d1-database-id>"
+migrations_dir = "migrations"
+```
+
+3. 產生 migration SQL：
+
+```bash
+pnpm db:generate
+pnpm db:generate:named --name=create_webhook_table
+```
+
+4. 套用到 remote D1：
+
+```bash
+pnpm db:migrate
+```
+
+5. 檢查 migration 與資料表：
+
+```bash
+pnpm db:migrations:list
+pnpm db:verify:tables
+```
+
+可用 scripts（在專案根目錄執行）：
+
+```bash
+pnpm db:generate         # 由 schema 產生 migration SQL（自動命名）
+pnpm db:generate:named --name=create_webhook_table  # 指定 migration 名稱
+pnpm db:migrate          # 套用 migration 到 remote D1
+pnpm db:migrations:list  # 查看未套用 migration
+pnpm db:verify:tables    # 檢查目前資料表
+```
+
 ## 開發
 
 ```bash

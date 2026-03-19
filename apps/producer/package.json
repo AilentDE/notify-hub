@@ -12,6 +12,7 @@
   "packageManager": "pnpm@10.32.1",
   "dependencies": {
     "@notify-hub/core": "workspace:*",
+    "drizzle-orm": "^0.45.1",
     "hono": "^4.12.8"
   }
 }

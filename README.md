@@ -83,7 +83,7 @@ export default defineConfig({
 });
 ```
 
-2. 在 `packages/core/wrangler.toml` 設定 D1 連線與 migration 目錄（`database_id` 請替換成 Cloudflare D1 頁面的 UUID）：
+2. 在 `packages/core/wrangler.toml` 設定 D1 綁定（預設環境）與 `env.production`（正式環境）：
 
 ```toml
 name = "notify-hub-db-migrations"
@@ -91,8 +91,16 @@ compatibility_date = "2026-03-19"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "<your-d1-database-name>"
-database_id = "<your-d1-database-id>"
+database_name = "<your-dev-d1-database-name>"
+database_id = "<your-dev-d1-database-id>"
+migrations_dir = "migrations"
+
+[env.production]
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "<your-production-d1-database-name>"
+database_id = "<your-production-d1-database-id>"
 migrations_dir = "migrations"
 ```
 
@@ -116,6 +124,16 @@ pnpm db:migrations:list
 pnpm db:verify:tables
 ```
 
+正式區（Production）建議使用 `:prod` 指令名稱，避免操作混淆：
+
+```bash
+pnpm db:migrations:list:prod
+pnpm db:migrate:prod
+pnpm db:verify:tables:prod
+```
+
+> `db:*:prod` 會帶入 `--env production`，讀取 `packages/core/wrangler.toml` 的 `[env.production]` 設定。
+
 可用 scripts（在專案根目錄執行）：
 
 ```bash
@@ -124,6 +142,9 @@ pnpm db:generate:named --name=create_webhook_table  # 指定 migration 名稱
 pnpm db:migrate          # 套用 migration 到 remote D1
 pnpm db:migrations:list  # 查看未套用 migration
 pnpm db:verify:tables    # 檢查目前資料表
+pnpm db:migrations:list:prod  # 查看正式區未套用 migration（--env production）
+pnpm db:migrate:prod          # 套用 migration 到正式區 D1（--env production）
+pnpm db:verify:tables:prod    # 檢查正式區資料表（--env production）
 ```
 
 ## 開發

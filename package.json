@@ -9,7 +9,10 @@
     "db:generate:named": "pnpm -C packages/core exec drizzle-kit generate --config=drizzle.config.ts --name=$npm_config_name",
     "db:migrate": "pnpm dlx wrangler --cwd packages/core d1 migrations apply DB --remote",
     "db:migrations:list": "pnpm dlx wrangler --cwd packages/core d1 migrations list DB --remote",
-    "db:verify:tables": "pnpm dlx wrangler --cwd packages/core d1 execute DB --remote --command \"SELECT name FROM sqlite_master WHERE type='table';\""
+    "db:verify:tables": "pnpm dlx wrangler --cwd packages/core d1 execute DB --remote --command \"SELECT name FROM sqlite_master WHERE type='table';\"",
+    "db:migrate:prod": "pnpm dlx wrangler --cwd packages/core d1 migrations apply DB --remote --env production",
+    "db:migrations:list:prod": "pnpm dlx wrangler --cwd packages/core d1 migrations list DB --remote --env production",
+    "db:verify:tables:prod": "pnpm dlx wrangler --cwd packages/core d1 execute DB --remote --env production --command \"SELECT name FROM sqlite_master WHERE type='table';\""
   },
   "keywords": [],
   "author": "",

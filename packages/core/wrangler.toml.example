@@ -6,3 +6,11 @@ binding = "DB"
 database_name = "<your-d1-database-name>"
 database_id = "<your-d1-database-id>"
 migrations_dir = "migrations"
+
+[env.production]
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "<your-production-d1-database-name>"
+database_id = "<your-production-d1-database-id>"
+migrations_dir = "migrations"

@@ -15,6 +15,7 @@ declare module "sst" {
   export interface Resource {
     "NotifyHubApi": cloudflare.Service
     "NotifyHubDb": cloudflare.D1Database
+    "NotifyHubKV": cloudflare.KVNamespace
     "NotifyHubQueue": cloudflare.Queue
   }
 }

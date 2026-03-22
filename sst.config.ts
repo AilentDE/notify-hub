@@ -14,6 +14,8 @@ export default $config({
     const db = new sst.cloudflare.D1("NotifyHubDb");
     // 2. Message queue
     const queue = new sst.cloudflare.Queue("NotifyHubQueue");
+    // 3. KV store (rate limiting)
+    const kv = new sst.cloudflare.Kv("NotifyHubKV");
 
     // Consumer
     queue.subscribe({
@@ -24,7 +26,7 @@ export default $config({
     const api = new sst.cloudflare.Worker("NotifyHubApi", {
       url: true,
       handler: "apps/producer/src/api.ts",
-      link: [db, queue],
+      link: [db, queue, kv],
     });
 
     return { ApiEndpoint: api.url };

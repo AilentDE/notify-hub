@@ -1,11 +1,19 @@
-// import { LogMessage } from "@notify-hub/core";
+import { logMessageSchema } from "@notify-hub/core";
+import sendMessage from "./controllers/message-controller";
 
 export default {
   async queue(batch: MessageBatch<any>) {
     for (const message of batch.messages) {
-      console.log("Processing message:", message);
+      const parsedMessage = logMessageSchema.safeParse(message.body);
+      if (!parsedMessage.success) {
+        console.error("Invalid message:", parsedMessage.error);
+        message.ack();
+        continue;
+      }
 
-      await message.ack();
+      await sendMessage(parsedMessage.data);
+
+      message.ack();
     }
   },
 };

@@ -1,12 +1,21 @@
 import { webhooksTable } from "@notify-hub/core";
-import { eq } from "drizzle-orm";
+import { eq, like } from "drizzle-orm";
 import { Context } from "hono";
 import { getDb } from "../lib/db";
 import { webhookSchemaUpsert } from "@notify-hub/core";
 
 const getWebhooks = async (c: Context): Promise<Response> => {
+  const skip = Number(c.req.query("skip") ?? 0);
+  const limit = Number(c.req.query("limit") ?? 10);
+  const origin = c.req.query("origin");
+
   const db = getDb();
-  const result = await db.select().from(webhooksTable);
+  const query = db.select().from(webhooksTable);
+  const result = await (
+    origin ? query.where(like(webhooksTable.origin, `%${origin}%`)) : query
+  )
+    .offset(skip)
+    .limit(limit);
 
   return c.json({ result });
 };

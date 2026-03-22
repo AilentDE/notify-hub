@@ -2,7 +2,7 @@ import { webhooksTable } from "@notify-hub/core";
 import { eq, like } from "drizzle-orm";
 import { Context } from "hono";
 import { getDb } from "../lib/db";
-import { webhookSchemaUpsert } from "@notify-hub/core";
+import { ResponseSchema, webhookSchemaUpsert } from "@notify-hub/core";
 
 const getWebhooks = async (c: Context): Promise<Response> => {
   const skip = Number(c.req.query("skip") ?? 0);
@@ -17,7 +17,12 @@ const getWebhooks = async (c: Context): Promise<Response> => {
     .offset(skip)
     .limit(limit);
 
-  return c.json({ result });
+  return c.json(
+    ResponseSchema.parse({
+      message: "Webhooks fetched successfully",
+      data: result,
+    }),
+  );
 };
 
 const upsertWebhook = async (c: Context): Promise<Response> => {
@@ -34,14 +39,26 @@ const upsertWebhook = async (c: Context): Promise<Response> => {
       .set({ ...webhook.data, updatedAt: new Date() })
       .where(eq(webhooksTable.id, webhook.data.id))
       .returning();
-    return c.json(result, 200);
+    return c.json(
+      ResponseSchema.parse({
+        message: "Webhook updated successfully",
+        data: result[0],
+      }),
+      200,
+    );
   }
 
   const result = await db
     .insert(webhooksTable)
     .values(webhook.data)
     .returning();
-  return c.json(result, 201);
+  return c.json(
+    ResponseSchema.parse({
+      message: "Webhook created successfully",
+      data: result[0],
+    }),
+    201,
+  );
 };
 
 const deleteWebhook = async (c: Context): Promise<Response> => {
@@ -56,7 +73,13 @@ const deleteWebhook = async (c: Context): Promise<Response> => {
     .delete(webhooksTable)
     .where(eq(webhooksTable.id, id))
     .returning();
-  return c.json(result, 200);
+  return c.json(
+    ResponseSchema.parse({
+      message: "Webhook deleted successfully",
+      data: result[0],
+    }),
+    200,
+  );
 };
 
 export default {

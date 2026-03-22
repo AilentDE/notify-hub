@@ -6,24 +6,41 @@ NOTIFY-HUB 是一個部署在 Cloudflare Workers 上的輕量通知轉發系統�
 
 ## 架構
 
-```
-應用程式
-  │  POST /log
+```text
+應用程式 / 管理者
+  │
+  ├─ POST /message (Rate Limited) 
+  └─ GET/PUT/DELETE /webhook (IP Allowlist)
   ▼
 Producer Worker  ──→  Cloudflare Queue  ──→  Consumer Worker
 (Hono API)                                    (處理 & 轉發)
-  │                                                │
-  └──────────────── D1 Database ──────────────────┘
-                  (Webhook 設定)
+  │      │                                         │
+  │      └─────────────────┐                       │
+  ▼                        ▼                       ▼
+Cloudflare KV        D1 Database ──────────────────┘
+(Rate Limit /        (Webhook 設定)
+ IP 白名單)
 ```
 
-| 元件                           | 說明                                      |
-| ------------------------------ | ----------------------------------------- |
-| **Producer** (`apps/producer`) | 接收 `POST /log` 請求，將訊息推入 Queue   |
-| **Consumer** (`apps/consumer`) | 訂閱 Queue，將訊息轉發至對應的 Webhook    |
-| **Core** (`packages/core`)     | 共用 schema、型別定義（Drizzle + Zod）    |
-| **D1**                         | 儲存 Webhook 設定（endpoint、類型）       |
-| **Queue**                      | 非同步傳遞訊息，解耦 Producer 與 Consumer |
+| 元件                           | 說明                                          |
+| ------------------------------ | --------------------------------------------- |
+| **Producer** (`apps/producer`) | Hono API，接收訊息與管理 Webhook，具備中間層防護 |
+| **Consumer** (`apps/consumer`) | 訂閱 Queue，將訊息轉發至對應的 Webhook 目標       |
+| **Core** (`packages/core`)     | 共用 schema、型別定義（Drizzle + Zod）        |
+| **D1**                         | 儲存 Webhook 設定（endpoint、接收類型對應）      |
+| **KV**                         | 儲存 Rate Limit 計數與 API IP 白名單設定         |
+| **Queue**                      | 非同步傳遞訊息，解耦 Producer 與 Consumer         |
+
+## API 安全與中間層 (Middlewares)
+
+Producer API 已整合 Cloudflare KV 實作以下防護機制：
+
+1. **Rate Limiter 速率限制** (保護 `/message` 端點)
+   - 限制每個 IP 在一分鐘內最多允許 600 次請求。
+   - 防止短時間內大量請求導致佇列或後端服務超載。
+2. **IP Allowlist 白名單** (保護 `/webhook` 端點)
+   - 透過 KV 中的 `allowed_ip:<ip>` 鍵值檢查是否允許存取 Webhook 管理介面。
+   - 僅允許受信任的 IP 讀取或修改通知目標設定。
 
 ## 支援的通知目標
 
@@ -36,6 +53,7 @@ Producer Worker  ──→  Cloudflare Queue  ──→  Consumer Worker
 - [Cloudflare Workers](https://workers.cloudflare.com/) — Serverless 執行環境
 - [Cloudflare Queue](https://developers.cloudflare.com/queues/) — 訊息佇列
 - [Cloudflare D1](https://developers.cloudflare.com/d1/) — SQLite 資料庫
+- [Cloudflare KV](https://developers.cloudflare.com/kv/) — 鍵值儲存 (用於中介層防護)
 - [Hono](https://hono.dev/) — 輕量 Web Framework
 - [Drizzle ORM](https://orm.drizzle.team/) + [drizzle-zod](https://orm.drizzle.team/docs/zod) — 型別安全的資料庫存取
 - [pnpm Workspaces](https://pnpm.io/workspaces) — Monorepo 套件管理
@@ -49,6 +67,7 @@ Producer Worker  ──→  Cloudflare Queue  ──→  Consumer Worker
   - Workers Scripts: Edit
   - Queues: Edit
   - D1: Edit
+  - KV Storage: Edit
 
 ## 環境設定
 
@@ -156,7 +175,7 @@ npx sst dev
 啟動後會輸出 API 端點 URL，可對其發送請求測試：
 
 ```bash
-curl -X POST <ApiEndpoint>/log \
+curl -X POST <ApiEndpoint>/message \
   -H "Content-Type: application/json" \
   -d '{
     "type": "API_ERROR",

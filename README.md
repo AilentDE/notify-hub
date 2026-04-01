@@ -76,6 +76,9 @@ Producer API 已整合 Cloudflare KV 實作以下防護機制：
 ```env
 CLOUDFLARE_API_TOKEN=<your_api_token>
 CLOUDFLARE_DEFAULT_ACCOUNT_ID=<your_account_id>
+
+# 部署至正式環境 (production) 必填：Producer API 自訂網域
+PROD_API_DOMAIN=api.notify-hub.yourdomain.com
 ```
 
 ## 安裝依賴
@@ -186,6 +189,8 @@ curl -X POST <ApiEndpoint>/message \
 ```
 
 ## 部署
+
+> 部署至正式服（production stage）前，必須設定 `PROD_API_DOMAIN` 環境變數。這會將 Producer API 綁定到該自訂網域。
 
 ```bash
 npx sst deploy --stage production

@@ -23,8 +23,15 @@ export default $config({
       link: [db],
     });
     // Producer
+    if ($app.stage === "production" && !process.env.PROD_API_DOMAIN) {
+      throw new Error(
+        "Missing environment variable: PROD_API_DOMAIN is required for production deployment.",
+      );
+    }
     const api = new sst.cloudflare.Worker("NotifyHubApi", {
-      url: true,
+      url: $app.stage !== "production",
+      domain:
+        $app.stage === "production" ? process.env.PROD_API_DOMAIN : undefined,
       handler: "apps/producer/src/api.ts",
       link: [db, queue, kv],
     });
